@@ -28,11 +28,11 @@ def main():
             img_id = pair[0]
             img_src = pair[1]
             try:
-                img = urlopen(Request(url=pair[1], headers=headers))
+                img = urlopen(Request(url=img_src, headers=headers))
                 img_id = img_id.split(':')[0]
                 filename = t + '/{}_{}.jpg'.format(n+1, img_id)
                 if(not os.path.exists(filename)):
-                    print('download : ' + pair[1])
+                    print('download : ' + img_src)
                     with open(filename,"wb") as f:
                         f.write(img.read())
             except:
