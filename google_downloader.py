@@ -15,21 +15,26 @@ def main():
                '(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'
                }
     search_url = "https://www.google.com/search?"
-    re_expr = re.compile('<img id.+?<div class.+?"ou":"(.+?)".+?:.+?</div>')
+    re_expr = re.compile('<img id="(.+?)".+?<div class.+?"ou":"(.+?)".+?:.+?</div>')
     for t in targets.split(','):
         quoted = quote(t)
         img_url =  search_url + 'q={}&tbm=isch'.format(quoted)
         img_req = Request(url=img_url, headers=headers)
         img_html = urlopen(img_req).read().decode('utf-8')
         img_srcs = re_expr.findall(img_html)
-        os.mkdir(t)
-        for i in enumerate(img_srcs):
+        if(not os.path.exists(t)):
+            os.mkdir(t)
+        for n, pair in enumerate(img_srcs):
+            img_id = pair[0]
+            img_src = pair[1]
             try:
-                img = urlopen(Request(url=i[1], headers=headers))
-                print(i[1])
-                filename = t + '/{}_{}.jpg'.format(t,str(i[0]+1))
-                with open(filename,"wb") as f:
-                    f.write(img.read())
+                img = urlopen(Request(url=pair[1], headers=headers))
+                img_id = img_id.split(':')[0]
+                filename = t + '/{}_{}.jpg'.format(n+1, img_id)
+                if(not os.path.exists(filename)):
+                    print('download : ' + pair[1])
+                    with open(filename,"wb") as f:
+                        f.write(img.read())
             except:
                 pass
 if __name__=="__main__":
