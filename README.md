@@ -1,6 +1,6 @@
 # google-image-downloader
 
-## Prerequisties
+## Prerequisites
 Python version 3 is used and it tested on Windows10, Mac OS.  
 Chrome browser is required.  
 ```
