@@ -27,7 +27,9 @@ def download_chromedriver(version):
     root = 'https://chromedriver.storage.googleapis.com/'
     os_name = platform.system()
 
-    if version == 74:
+    if version == 75:
+        root += '75.0.3770.90/'
+    elif version == 74:
         root += '74.0.3729.6/'
     elif version == 73:
         root += '73.0.3683.68/'
@@ -67,7 +69,7 @@ def main():
     if not exist_chromedriver('./'):
         download_chromedriver(int(args.version))
     browser = webdriver.Chrome('./chromedriver')
-    headers = {'User-Agent': 
+    headers = {'User-Agent':
                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36'
                '(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'
                }
