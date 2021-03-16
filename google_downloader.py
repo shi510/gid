@@ -74,11 +74,10 @@ def get_all_image_element_ids(browser, target):
     search_url = 'https://www.google.com/search?'
     img_url =  search_url + 'q={}&tbm=isch'.format(target)
     browser.get(img_url)
-    # towards_end_of_scroll(browser)
+    towards_end_of_scroll(browser)
     # Click more images
-    # browser.find_element_by_xpath('//input[@class="mye4qd"]').click()
-    # towards_end_of_scroll(browser)
-    time.sleep(1)
+    browser.find_element_by_xpath('//input[@class="mye4qd"]').click()
+    towards_end_of_scroll(browser)
     match_results = re_expr_clickable.findall(browser.page_source)
     return match_results
 
