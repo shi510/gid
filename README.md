@@ -1,5 +1,10 @@
 # google-image-downloader
 
+## What's Different from existing github implementations?
+The objective of this code is to download `original images`.  
+It finds all original sources by clicking all image elements.  
+So, it takes long time to download all `original images`.  
+
 ## Prerequisites
 Python version 3 is used and it tested on Windows10, Mac OS.  
 Chrome browser is required.  
