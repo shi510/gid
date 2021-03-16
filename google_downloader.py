@@ -1,14 +1,19 @@
-from selenium import webdriver
-from urllib.request import urlopen, Request
-from urllib.parse import quote
 import argparse
 import time
 import re
 import os
 import platform
-import wget
 import zipfile
 import stat
+import ssl
+
+import wget
+from tqdm import tqdm
+from selenium import webdriver
+from urllib.request import urlopen, Request
+from urllib.parse import quote
+
+DOWNLOAD_ROOT = 'downloaded_images'
 
 def towards_end_of_scroll(browser):
     len_script = 'window.scrollTo(0, document.body.scrollHeight);'\
@@ -27,14 +32,10 @@ def download_chromedriver(version):
     root = 'https://chromedriver.storage.googleapis.com/'
     os_name = platform.system()
 
-    if version == 75:
-        root += '75.0.3770.90/'
-    elif version == 74:
-        root += '74.0.3729.6/'
-    elif version == 73:
-        root += '73.0.3683.68/'
-    elif version == 72:
-        root += '72.0.3626.69/'
+    if version == 89:
+        root += '89.0.4389.23/'
+    elif version == 90:
+        root += '90.0.4430.24/'
     else:
         raise 'Wrong chrome version : ' + version
 
@@ -59,47 +60,87 @@ def exist_chromedriver(path):
             return True
     return False
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--browser', required=True)
-    parser.add_argument('-v', '--version', required=True)
-    parser.add_argument("-s", "--search", required=True)
-    args = parser.parse_args()
+def get_browser(args):
+    options = webdriver.ChromeOptions()
+    if args.window == 0:
+        options.add_argument('--no-sandbox')
+        options.add_argument('--headless')
+    options.add_argument('--ignore-certificate-errors')
+    browser = webdriver.Chrome('./chromedriver', chrome_options=options)
+    return browser
+
+def get_all_image_element_ids(browser, target):
+    re_expr_clickable = re.compile('<div jsaction=.+?data-id="(.+?)".+?>')
+    search_url = 'https://www.google.com/search?'
+    img_url =  search_url + 'q={}&tbm=isch'.format(target)
+    browser.get(img_url)
+    # towards_end_of_scroll(browser)
+    # Click more images
+    # browser.find_element_by_xpath('//input[@class="mye4qd"]').click()
+    # towards_end_of_scroll(browser)
+    time.sleep(1)
+    match_results = re_expr_clickable.findall(browser.page_source)
+    return match_results
+
+def get_original_image_sources(browser, elem_id):
+    re_expr_img_path = re.compile('<img alt.+?src="([http|https].+?)"')
+    xpath = '//div[@data-id="{}"]'.format(elem_id)
+    browser.find_element_by_xpath(xpath).click()
+    time.sleep(1)
+    html_src = browser.find_elements_by_xpath('//div[@class="v4dQwb"]/a[@class="eHAdSb"]')
+    URLs = []
+    for src in html_src:
+        img_url_html = src.get_attribute('innerHTML')
+        results = re_expr_img_path.findall(img_url_html)
+        if len(results) > 0:
+            URLs.append(results[0])
+            if 'encrypted-tbn0' not in results[0]:
+                URLs = [results[0]]
+                break
+    return URLs
+
+def download_url(filename, url, ssl_context):
+    headers = {'User-Agent':
+               'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36'
+               '(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+                'Accept-Encoding': 'none',
+                'Accept-Language': 'en-US,en;q=0.8',
+                'Connection': 'keep-alive'
+               }
+    try:
+        img = urlopen(Request(url=url, headers=headers), context=ssl_context)
+        if(not os.path.exists(filename)):
+            with open(filename, 'wb') as f:
+                f.write(img.read())
+    except Exception as e:
+        pass
+
+def main(args):
     targets = args.search
     if not exist_chromedriver('./'):
         download_chromedriver(int(args.version))
-    browser = webdriver.Chrome('./chromedriver')
-    headers = {'User-Agent':
-               'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36'
-               '(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'
-               }
+    browser = get_browser(args)
+    for target_name in targets.split(','):
+        target_folder = os.path.join(DOWNLOAD_ROOT, target_name)
+        if not os.path.exists(target_folder):
+            os.mkdir(target_folder)
+        element_ids = get_all_image_element_ids(browser, quote(target_name))
+        for e_idx, elem_id in enumerate(tqdm(element_ids)):
+            URLs = get_original_image_sources(browser, elem_id)
+            for u_idx, url in enumerate(URLs):
+                filename = target_folder + '/{}_{}_{}.jpg'
+                filename = filename.format(target_name, e_idx+1, u_idx+1)
+                download_url(filename, url, ssl_context)
 
-    search_url = "https://www.google.com/search?"
-    re_expr = re.compile('<img id="(.+?)".+?<div class.+?'\
-                         '"ou":"(.+?)".+?:.+?</div>')
-    for t in targets.split(','):
-        quoted = quote(t)
-        img_url =  search_url + 'q={}&tbm=isch'.format(quoted)
-        browser.get(img_url)
-        towards_end_of_scroll(browser)
-        browser.find_element_by_xpath('//input[@class="ksb"]').click()
-        towards_end_of_scroll(browser)
-        img_srcs = re_expr.findall(browser.page_source)
-
-        if(not os.path.exists(t)):
-            os.mkdir(t)
-        for n, pair in enumerate(img_srcs):
-            img_id = pair[0]
-            img_src = pair[1]
-            try:
-                img = urlopen(Request(url=img_src, headers=headers))
-                img_id = img_id.split(':')[0]
-                filename = t + '/{}_{}.jpg'.format(n+1, img_id)
-                if(not os.path.exists(filename)):
-                    print('download : ' + img_src)
-                    with open(filename,"wb") as f:
-                        f.write(img.read())
-            except:
-                print('can not access : {}'.format(img_src))
-if __name__=="__main__":
-    main()
+if __name__ == '__main__':
+    ssl_context = ssl._create_unverified_context()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--browser', required=True)
+    parser.add_argument('-v', '--version', required=True)
+    parser.add_argument('-s', '--search', required=True)
+    parser.add_argument('-w', '--window', type=int,
+        default=1, help='show browser (default: 1)')
+    args = parser.parse_args()
+    main(args)
