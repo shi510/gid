@@ -6,17 +6,16 @@ It finds all original sources by clicking all image elements.
 So, it takes long time to download all `original images`.  
 
 ## Prerequisites
-Python version 3 is used and it tested on Windows10, Mac OS.  
-Chrome browser is required.  
+1. Python 3  
+2. Crome Browser  
 ```
 pip install selenium, wget, urllib
 ```
 You have to feed your chrome browser version into --version argument.  
-For example, if your version is 73.0.3683.103 then feed just 73.  
-Then, it automatically downloads the chrome driver.
-Don't insert space between arguments of --search.  
-ex) --search 권나라,` `수지,` `이선빈  
+For example, if the version is 89.0.4389.90 then feed just 89.  
+Then, it automatically downloads the chrome driver.  
+Do not insert white-space between arguments comma of --search.  
 ## Usage
 ```
-python google_downloader.py --browser chrome --version 73 --search 권나라,수지,이선빈
+python google_downloader.py --version 89 --search "Taylor Swift","Christopher Nolan"
 ```
