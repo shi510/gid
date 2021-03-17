@@ -136,7 +136,7 @@ def main(args):
 if __name__ == '__main__':
     ssl_context = ssl._create_unverified_context()
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--browser', required=True)
+    # parser.add_argument('-b', '--browser', required=True)
     parser.add_argument('-v', '--version', required=True)
     parser.add_argument('-s', '--search', required=True)
     parser.add_argument('-w', '--window', type=int,
