@@ -123,8 +123,7 @@ def main(args):
     browser = get_browser(args)
     for target_name in targets.split(','):
         target_folder = os.path.join(DOWNLOAD_ROOT, target_name)
-        if not os.path.exists(target_folder):
-            os.mkdir(target_folder)
+        os.makedirs(target_folder, exist_ok=True)
         element_ids = get_all_image_element_ids(browser, quote(target_name))
         for e_idx, elem_id in enumerate(tqdm(element_ids)):
             URLs = get_original_image_sources(browser, elem_id)
