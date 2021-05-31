@@ -141,7 +141,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--version', required=True)
     parser.add_argument('-s', '--search', required=True)
     parser.add_argument('-m', '--more_images', required=False,
-        type=bool, default=False)
+        type=bool, default=False,
+        help='Click more images button')
     parser.add_argument('-w', '--window', type=int,
         default=1, help='show browser (default: 1)')
     args = parser.parse_args()
